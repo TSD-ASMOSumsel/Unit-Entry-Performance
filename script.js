@@ -2,25 +2,7 @@ const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR8TwZ8J4v_1iA1
 const PAGE_SIZE = 12;
 let rawData = [], filteredData = [], page = 1, charts = {};
 const $ = id => document.getElementById(id);
-// Counts are Indonesian-formatted integers (e.g. 2.413 = 2,413).
-// Ratio fields are decimal fractions (e.g. -0.0858 = -8.58%).
-const number = v => {
-  const s = String(v ?? "").trim().replace(/[^\d,.-]/g,"");
-  if (!s) return 0;
-  const normalized = s.replace(/\./g,"").replace(",", ".");
-  return Number(normalized) || 0;
-};
-const ratio = v => {
-  let s = String(v ?? "").trim().replace(/[%\s]/g,"");
-  if (!s) return 0;
-  // CSV formula values use decimal dot; support comma decimal as well.
-  if (s.includes(",") && s.includes(".")) s = s.replace(/\./g,"").replace(",", ".");
-  else if (s.includes(",")) s = s.replace(",", ".");
-  const n = Number(s);
-  if (!Number.isFinite(n)) return 0;
-  // If source is already expressed as percent points (e.g. -8.58%), convert to fraction.
-  return String(v).includes("%") ? n/100 : n;
-};
+const number = v => Number(String(v ?? "").replace(/[^\d,.-]/g,"").replace(/\.(?=\d{3}(?:\D|$))/g,"").replace(",", ".")) || 0;
 const fmt = v => Math.round(v).toLocaleString("id-ID");
 const pct = v => `${(v*100).toFixed(1).replace(".",",")}%`;
 const norm = s => String(s ?? "").toLowerCase().replace(/\s+/g," ").trim();
@@ -38,7 +20,7 @@ function parseRows(rows){
       status:String(cells[4]??"").trim(), code:String(cells[5]??"").trim(),
       name:String(cells[6]??"").trim(), lastMonth:number(cells[7]),
       target:number(cells[8]), actual:number(cells[9]),
-      growth:ratio(cells[10]), achievement:ratio(cells[11])
+      growth:number(cells[10]), achievement:number(cells[11])
     };
     if(item.name && item.code && (item.target || item.actual || item.lastMonth)) data.push(item);
   });
@@ -85,79 +67,16 @@ function renderKpis(){
 }
 function destroyChart(id){if(charts[id])charts[id].destroy()}
 function renderCharts(){
-  // Aggregate the network at Dealer Group level for every chart in this section.
-  const grouped = {};
-  filteredData.forEach(x => {
-    const key = x.group || "Tidak diketahui";
-    if(!grouped[key]) grouped[key] = {group:key, actual:0, target:0, lastMonth:0, ahassCount:0};
-    grouped[key].actual += x.actual;
-    grouped[key].target += x.target;
-    grouped[key].lastMonth += x.lastMonth;
-    grouped[key].ahassCount += 1;
-  });
-  const groupStats = Object.values(grouped).map(g => ({
-    ...g,
-    achievement: g.target ? g.actual/g.target : 0,
-    growth: g.lastMonth ? g.actual/g.lastMonth-1 : 0
-  }));
-  const sorted=[...groupStats].sort((a,b)=>b.actual-a.actual);
-
-  destroyChart("achievement");
-  charts.achievement=new Chart($("achievementChart"),{
-    type:"bar",
-    data:{
-      labels:sorted.map(x=>x.group),
-      datasets:[
-        {label:"Actual UE",data:sorted.map(x=>x.actual),backgroundColor:"#ff6b2c",borderRadius:4},
-        {label:"Target UE",data:sorted.map(x=>x.target),backgroundColor:"#f5c7b3",borderRadius:4}
-      ]
-    },
-    options:{
-      responsive:true,maintainAspectRatio:false,indexAxis:"y",
-      plugins:{legend:{position:"bottom",labels:{boxWidth:9,font:{size:10}}}},
-      scales:{x:{beginAtZero:true,grid:{color:"#edf1f5"},ticks:{font:{size:9}}},y:{grid:{display:false},ticks:{font:{size:10}}}}
-    }
-  });
-
-  const groupEntries=[...groupStats].sort((a,b)=>b.actual-a.actual);
-  destroyChart("group");
-  charts.group=new Chart($("groupChart"),{
-    type:"doughnut",
-    data:{
-      labels:groupEntries.map(x=>x.group),
-      datasets:[{data:groupEntries.map(x=>x.actual),backgroundColor:["#ff6b2c","#ff8b58","#ffad87","#ffd0bb","#ffc08a","#d8d8d8","#f29a73","#bdbdbd","#e8a28b","#f4c4ad","#c7c7c7","#ed8057"],borderWidth:2,borderColor:"#fff"}]
-    },
-    options:{responsive:true,maintainAspectRatio:false,cutout:"65%",plugins:{legend:{position:"bottom",labels:{boxWidth:9,padding:12,font:{size:9}}}}}
-  });
-
-  // Distribution is based on each Dealer Group's aggregate achievement, not individual AHASS.
+  const sorted=[...filteredData].sort((a,b)=>b.actual-a.actual).slice(0,12);
+  destroyChart("achievement");charts.achievement=new Chart($("achievementChart"),{type:"bar",data:{labels:sorted.map(x=>shortName(x.name)),datasets:[{label:"Actual",data:sorted.map(x=>x.actual),backgroundColor:"#e32645",borderRadius:4},{label:"Target",data:sorted.map(x=>x.target),backgroundColor:"#d8e3ed",borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",plugins:{legend:{position:"bottom",labels:{boxWidth:9,font:{size:10}}}},scales:{x:{grid:{color:"#edf1f5"},ticks:{font:{size:9}}},y:{grid:{display:false},ticks:{font:{size:9}}}}}});
+  const groups={};filteredData.forEach(x=>groups[x.group]=(groups[x.group]||0)+x.actual);
+  const groupEntries=Object.entries(groups).sort((a,b)=>b[1]-a[1]);
+  destroyChart("group");charts.group=new Chart($("groupChart"),{type:"doughnut",data:{labels:groupEntries.map(x=>x[0]),datasets:[{data:groupEntries.map(x=>x[1]),backgroundColor:["#e32645","#238fca","#45a9d1","#9cc9df","#e6ad21","#71869a","#238fca","#aebdca"],borderWidth:2,borderColor:"#fff"}]},options:{responsive:true,maintainAspectRatio:false,cutout:"65%",plugins:{legend:{position:"bottom",labels:{boxWidth:9,padding:12,font:{size:9}}}}}});
   const buckets=[{label:"≥100%",min:1,max:Infinity},{label:"80–99%",min:.8,max:1},{label:"60–79%",min:.6,max:.8},{label:"<60%",min:-Infinity,max:.6}];
-  destroyChart("distribution");
-  charts.distribution=new Chart($("distributionChart"),{
-    type:"bar",
-    data:{
-      labels:buckets.map(b=>b.label),
-      datasets:[{label:"Jumlah Grup Dealer",data:buckets.map(b=>groupStats.filter(x=>x.achievement>=b.min&&x.achievement<b.max).length),backgroundColor:["#ff6b2c","#ff9a70","#ffc08a","#d7a091"],borderRadius:5}]
-    },
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0,font:{size:9}},grid:{color:"#edf1f5"}},x:{grid:{display:false},ticks:{font:{size:10}}}}}
-  });
-
-  const growers=[...groupStats].sort((a,b)=>b.growth-a.growth);
-  destroyChart("growth");
-  charts.growth=new Chart($("growthChart"),{
-    type:"bar",
-    data:{
-      labels:growers.map(x=>x.group),
-      datasets:[{label:"Growth vs M-1",data:growers.map(x=>x.growth*100),backgroundColor:growers.map(x=>x.growth>=0?"#ff7a45":"#d7a091"),borderRadius:4}]
-    },
-    options:{
-      responsive:true,maintainAspectRatio:false,indexAxis:"y",
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw.toFixed(1)}%`}}},
-      scales:{x:{ticks:{callback:v=>v+"%",font:{size:9}},grid:{color:"#edf1f5"}},y:{grid:{display:false},ticks:{font:{size:10}}}}
-    }
-  });
+  destroyChart("distribution");charts.distribution=new Chart($("distributionChart"),{type:"bar",data:{labels:buckets.map(b=>b.label),datasets:[{label:"Jumlah AHASS",data:buckets.map(b=>filteredData.filter(x=>x.achievement>=b.min&&x.achievement<b.max).length),backgroundColor:["#e32645","#238fca","#e6ad21","#d6a0a4"],borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0,font:{size:9}},grid:{color:"#edf1f5"}},x:{grid:{display:false},ticks:{font:{size:10}}}}}});
+  const growers=[...filteredData].sort((a,b)=>b.growth-a.growth).slice(0,8);
+  destroyChart("growth");charts.growth=new Chart($("growthChart"),{type:"bar",data:{labels:growers.map(x=>shortName(x.name)),datasets:[{label:"Growth vs M-1",data:growers.map(x=>x.growth*100),backgroundColor:growers.map(x=>x.growth>=0?"#238fca":"#e32645"),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw.toFixed(1)}%`}}},scales:{x:{ticks:{callback:v=>v+"%",font:{size:9}},grid:{color:"#edf1f5"}},y:{grid:{display:false},ticks:{font:{size:9}}}}}});
 }
-
 function shortName(s){return s.length>23?s.slice(0,21)+"…":s}
 function escapeHtml(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function renderTable(){
@@ -175,28 +94,3 @@ $("refreshBtn").addEventListener("click",loadData);
 $("prevPage").addEventListener("click",()=>{page--;renderTable()});$("nextPage").addEventListener("click",()=>{page++;renderTable()});
 loadData();
 setInterval(loadData,5*60*1000);
-
-
-// Keep the sidebar selection synchronized with the section currently in view.
-(function setupActiveNavigation(){
-  const links = [...document.querySelectorAll(".nav-item")];
-  const sections = links.map(link => document.querySelector(link.getAttribute("href"))).filter(Boolean);
-  function setActive(id){
-    links.forEach(link => {
-      const active = link.getAttribute("href") === `#${id}`;
-      link.classList.toggle("active", active);
-      if(active) link.setAttribute("aria-current","page");
-      else link.removeAttribute("aria-current");
-    });
-  }
-  links.forEach(link => link.addEventListener("click", () => setActive(link.hash.slice(1))));
-  window.addEventListener("hashchange", () => setActive(location.hash.slice(1) || "overview"));
-  if("IntersectionObserver" in window){
-    const observer = new IntersectionObserver(entries => {
-      const visible = entries.filter(e => e.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];
-      if(visible) setActive(visible.target.id);
-    }, {rootMargin:"-18% 0px -62% 0px",threshold:[0,.15,.35,.6]});
-    sections.forEach(section => observer.observe(section));
-  }
-  setActive(location.hash.slice(1) || "overview");
-})();
