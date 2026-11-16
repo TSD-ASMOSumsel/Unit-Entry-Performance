@@ -44,3 +44,6 @@ A leading blank column is supported, as in the provided workbook. The dashboard 
 - Achievement is read as a decimal ratio and displayed as a percentage: `Actual November / Target November`.
 - Count columns use Indonesian thousands separators (for example, `2.413` means 2,413).
 - The ratio parser is separate from the count parser to avoid treating decimal fractions such as `0.4775` as `4,775`.
+
+## V4 chart aggregation
+All charts in the Performance Analysis section are aggregated by Grup Dealer: actual vs target, actual contribution, achievement distribution, and growth vs M-1. Group growth and achievement are recalculated from group totals (sum actual / sum comparator), not averaged from individual AHASS percentages. The detailed AHASS ranking table remains at AHASS level.
