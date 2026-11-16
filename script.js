@@ -2,7 +2,25 @@ const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR8TwZ8J4v_1iA1
 const PAGE_SIZE = 12;
 let rawData = [], filteredData = [], page = 1, charts = {};
 const $ = id => document.getElementById(id);
-const number = v => Number(String(v ?? "").replace(/[^\d,.-]/g,"").replace(/\.(?=\d{3}(?:\D|$))/g,"").replace(",", ".")) || 0;
+// Counts are Indonesian-formatted integers (e.g. 2.413 = 2,413).
+// Ratio fields are decimal fractions (e.g. -0.0858 = -8.58%).
+const number = v => {
+  const s = String(v ?? "").trim().replace(/[^\d,.-]/g,"");
+  if (!s) return 0;
+  const normalized = s.replace(/\./g,"").replace(",", ".");
+  return Number(normalized) || 0;
+};
+const ratio = v => {
+  let s = String(v ?? "").trim().replace(/[%\s]/g,"");
+  if (!s) return 0;
+  // CSV formula values use decimal dot; support comma decimal as well.
+  if (s.includes(",") && s.includes(".")) s = s.replace(/\./g,"").replace(",", ".");
+  else if (s.includes(",")) s = s.replace(",", ".");
+  const n = Number(s);
+  if (!Number.isFinite(n)) return 0;
+  // If source is already expressed as percent points (e.g. -8.58%), convert to fraction.
+  return String(v).includes("%") ? n/100 : n;
+};
 const fmt = v => Math.round(v).toLocaleString("id-ID");
 const pct = v => `${(v*100).toFixed(1).replace(".",",")}%`;
 const norm = s => String(s ?? "").toLowerCase().replace(/\s+/g," ").trim();
@@ -20,7 +38,7 @@ function parseRows(rows){
       status:String(cells[4]??"").trim(), code:String(cells[5]??"").trim(),
       name:String(cells[6]??"").trim(), lastMonth:number(cells[7]),
       target:number(cells[8]), actual:number(cells[9]),
-      growth:number(cells[10]), achievement:number(cells[11])
+      growth:ratio(cells[10]), achievement:ratio(cells[11])
     };
     if(item.name && item.code && (item.target || item.actual || item.lastMonth)) data.push(item);
   });

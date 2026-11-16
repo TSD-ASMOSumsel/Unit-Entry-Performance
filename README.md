@@ -38,3 +38,9 @@ A leading blank column is supported, as in the provided workbook. The dashboard 
 - The dashboard refreshes automatically every 5 minutes and also has a manual refresh button.
 - If the Google Sheet column order changes, update the field mapping in `parseRows()` in `script.js`.
 - Charts use Chart.js and CSV parsing uses Papa Parse via CDN.
+
+## Calculation and formatting
+- Growth vs M-1 is read as a decimal ratio and displayed as a percentage: `(Actual November / MTD Last Month) - 1`.
+- Achievement is read as a decimal ratio and displayed as a percentage: `Actual November / Target November`.
+- Count columns use Indonesian thousands separators (for example, `2.413` means 2,413).
+- The ratio parser is separate from the count parser to avoid treating decimal fractions such as `0.4775` as `4,775`.
