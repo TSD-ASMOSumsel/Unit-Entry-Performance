@@ -38,6 +38,8 @@
         </div>
         <div class="top-actions">
           <span class="updated" id="lastUpdated">Menunggu data...</span>
+          <button class="export-btn export-excel" id="exportExcelBtn" type="button">↓ <span>Export Excel</span></button>
+          <button class="export-btn export-jpeg" id="exportJpegBtn" type="button">▧ <span>Export JPEG</span></button>
           <button class="refresh-btn" id="refreshBtn" type="button">↻ <span>Refresh data</span></button>
         </div>
       </header>
@@ -88,6 +90,8 @@
   <div class="toast" id="toast" role="status"></div>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

@@ -50,3 +50,9 @@ All charts in the Performance Analysis section are aggregated by Grup Dealer: ac
 
 ## V7 calculation and chart correction
 Growth is recalculated as `(Actual November / MTD Last Month) - 1`; Achievement is recalculated as `Actual November / Target November`. The imported percentage columns are intentionally ignored to prevent percentage scaling errors. All performance charts aggregate by Grup Dealer; the detailed ranking remains at AHASS level. The growth chart includes every group rather than only the top eight.
+
+## V8 navigation and export features
+- Sidebar active state follows the selected section and the section currently in view.
+- Export Excel downloads the currently filtered AHASS rows, with Growth and Achievement stored as percentage-formatted numeric values. A second worksheet records the active filters and export timestamp.
+- Export JPEG captures the full dashboard content area, including KPI cards, charts and ranking table.
+- Export libraries are loaded from public CDNs (SheetJS and html2canvas).

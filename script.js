@@ -161,3 +161,99 @@ $("refreshBtn").addEventListener("click",loadData);
 $("prevPage").addEventListener("click",()=>{page--;renderTable()});$("nextPage").addEventListener("click",()=>{page++;renderTable()});
 loadData();
 setInterval(loadData,5*60*1000);
+
+
+// Sidebar navigation: active highlight follows the selected/visible section.
+(function initSidebarNavigation(){
+  const navLinks=[...document.querySelectorAll(".sidebar .nav-item")];
+  const sections=navLinks.map(link=>document.querySelector(link.getAttribute("href"))).filter(Boolean);
+  const activate=id=>{
+    navLinks.forEach(link=>{
+      const selected=link.getAttribute("href")===`#${id}`;
+      link.classList.toggle("active",selected);
+      if(selected) link.setAttribute("aria-current","page");
+      else link.removeAttribute("aria-current");
+    });
+  };
+  navLinks.forEach(link=>link.addEventListener("click",()=>{
+    const id=link.getAttribute("href").slice(1);
+    activate(id);
+  }));
+  window.addEventListener("hashchange",()=>activate(location.hash.slice(1)||"overview"));
+  if("IntersectionObserver" in window){
+    const observer=new IntersectionObserver(entries=>{
+      const candidates=entries.filter(entry=>entry.isIntersecting);
+      if(!candidates.length) return;
+      candidates.sort((a,b)=>b.intersectionRatio-a.intersectionRatio);
+      activate(candidates[0].target.id);
+    },{root:null,rootMargin:"-16% 0px -64% 0px",threshold:[0,.1,.25,.45,.65]});
+    sections.forEach(section=>observer.observe(section));
+  }
+  activate(location.hash.slice(1)||"overview");
+})();
+
+// Export the currently filtered AHASS records to an Excel workbook.
+function exportFilteredExcel(){
+  if(!filteredData.length){showToast("Tidak ada data untuk diekspor.");return;}
+  if(typeof XLSX==="undefined"){showToast("Library Excel belum berhasil dimuat.");return;}
+  const rows=filteredData.map(x=>({
+    "No AHASS":x.code,
+    "Nama AHASS":x.name,
+    "Grup Dealer":x.group,
+    "Kabupaten":x.district,
+    "Status":x.status,
+    "MTD Last Month":x.lastMonth,
+    "Target November":x.target,
+    "Actual November":x.actual,
+    "Growth vs M-1":x.growth,
+    "Achievement":x.achievement
+  }));
+  const ws=XLSX.utils.json_to_sheet(rows);
+  ws["!cols"]=[{wch:14},{wch:32},{wch:18},{wch:20},{wch:14},{wch:18},{wch:18},{wch:18},{wch:16},{wch:16}];
+  for(let r=2;r<=rows.length+1;r++){
+    const growthCell=ws[`I${r}`],achievementCell=ws[`J${r}`];
+    if(growthCell) growthCell.z="0.0%";
+    if(achievementCell) achievementCell.z="0.0%";
+  }
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,"Unit Entry");
+  const filterInfo=[
+    ["Filter","Value"],
+    ["Grup Dealer",$("groupFilter").value==="all"?"Semua":$("groupFilter").value],
+    ["Kabupaten",$("districtFilter").value==="all"?"Semua":$("districtFilter").value],
+    ["Status",$("statusFilter").value==="all"?"Semua":$("statusFilter").value],
+    ["Jumlah AHASS",filteredData.length],
+    ["Waktu Export",new Date().toLocaleString("id-ID")]
+  ];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(filterInfo),"Export Info");
+  XLSX.writeFile(wb,`Unit_Entry_Performance_${new Date().toISOString().slice(0,10)}.xlsx`);
+  showToast("File Excel berhasil disiapkan.");
+}
+
+// Export a JPEG snapshot of the complete dashboard view.
+async function exportDashboardJpeg(){
+  const button=$("exportJpegBtn");
+  if(typeof html2canvas==="undefined"){showToast("Library JPEG belum berhasil dimuat.");return;}
+  button.disabled=true;button.textContent="Preparing...";
+  try{
+    const target=document.querySelector(".main-content");
+    const canvas=await html2canvas(target,{
+      scale:2,
+      useCORS:true,
+      backgroundColor:"#f4f6fa",
+      logging:false,
+      windowWidth:Math.max(document.documentElement.clientWidth,target.scrollWidth)
+    });
+    const link=document.createElement("a");
+    link.download=`Unit_Entry_Dashboard_${new Date().toISOString().slice(0,10)}.jpg`;
+    link.href=canvas.toDataURL("image/jpeg",0.94);
+    link.click();
+    showToast("JPEG dashboard berhasil diekspor.");
+  }catch(error){
+    console.error(error);showToast("Gagal membuat JPEG. Coba kembali.");
+  }finally{
+    button.disabled=false;button.innerHTML='▧ <span>Export JPEG</span>';
+  }
+}
+$("exportExcelBtn").addEventListener("click",exportFilteredExcel);
+$("exportJpegBtn").addEventListener("click",exportDashboardJpeg);

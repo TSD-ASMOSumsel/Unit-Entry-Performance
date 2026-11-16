@@ -34,3 +34,18 @@ body{background:var(--bg);color:var(--ink)}
 .chart-tag{background:#eef4f9;color:#52718e}
 
 .lower-charts{grid-template-columns:1fr;margin-top:14px}.growth-full-panel{width:100%;grid-column:1 / -1}.growth-chart-wrap{height:320px;min-height:320px;position:relative;margin-top:14px}
+
+/* Active sidebar item is controlled by the current section, not hard-coded Overview. */
+.sidebar nav .nav-item{position:relative;transition:background .18s ease,color .18s ease}
+.sidebar nav .nav-item.active{background:#204b78!important;color:#fff!important;border-color:#204b78!important}
+.sidebar nav .nav-item:not(.active){background:transparent!important;color:#d2deea!important}
+.sidebar nav .nav-item:not(.active)::before{display:none}
+.sidebar nav .nav-item.active::before{display:block;content:"";position:absolute;left:-19px;top:7px;bottom:7px;width:3px;border-radius:0 4px 4px 0;background:#e32645}
+.top-actions{flex-wrap:wrap}
+.export-btn{height:38px;border:0;border-radius:7px;padding:0 13px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:.18s}
+.export-excel{background:#238fca;color:#fff}
+.export-excel:hover{background:#1677ae}
+.export-jpeg{background:#e32645;color:#fff}
+.export-jpeg:hover{background:#c91c38}
+.export-btn:disabled{opacity:.55;cursor:wait}
+@media(max-width:760px){.top-actions{gap:7px}.export-btn,.refresh-btn{flex:1;padding:0 8px}.updated{width:100%}}
