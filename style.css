@@ -32,3 +32,5 @@ body{background:var(--bg);color:var(--ink)}
 .refresh-btn{background:#183e68}
 .refresh-btn:hover{background:#245987}
 .chart-tag{background:#eef4f9;color:#52718e}
+
+.lower-charts{grid-template-columns:1fr;margin-top:14px}.growth-full-panel{width:100%;grid-column:1 / -1}.growth-chart-wrap{height:320px;min-height:320px;position:relative;margin-top:14px}

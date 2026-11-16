@@ -47,3 +47,6 @@ A leading blank column is supported, as in the provided workbook. The dashboard 
 
 ## V4 chart aggregation
 All charts in the Performance Analysis section are aggregated by Grup Dealer: actual vs target, actual contribution, achievement distribution, and growth vs M-1. Group growth and achievement are recalculated from group totals (sum actual / sum comparator), not averaged from individual AHASS percentages. The detailed AHASS ranking table remains at AHASS level.
+
+## V7 calculation and chart correction
+Growth is recalculated as `(Actual November / MTD Last Month) - 1`; Achievement is recalculated as `Actual November / Target November`. The imported percentage columns are intentionally ignored to prevent percentage scaling errors. All performance charts aggregate by Grup Dealer; the detailed ranking remains at AHASS level. The growth chart includes every group rather than only the top eight.
