@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#102b4e" />
+  <title>Unit Entry Performance | Astra Motor Sumatera Selatan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">AM</div>
+        <div><strong>ASTRA MOTOR</strong><span>SUMATERA SELATAN</span></div>
+      </div>
+      <div class="side-label">PERFORMANCE MONITORING</div>
+      <nav>
+        <a class="nav-item active" href="#overview"><span class="nav-icon">▦</span> Overview</a>
+        <a class="nav-item" href="#trend"><span class="nav-icon">↗</span> Performance Analysis</a>
+        <a class="nav-item" href="#ranking"><span class="nav-icon">☷</span> AHASS Ranking</a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="live-dot"></div><span>Google Sheets connected</span>
+        <small>UNIT ENTRY TRACKER · 2026</small>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">AFTERSALES PERFORMANCE / UNIT ENTRY</div>
+          <h1>Unit Entry Performance</h1>
+          <p class="subtitle">Monitoring pencapaian Unit Entry jaringan AHASS Astra Motor Sumatera Selatan.</p>
+        </div>
+        <div class="top-actions">
+          <span class="updated" id="lastUpdated">Menunggu data...</span>
+          <button class="refresh-btn" id="refreshBtn" type="button">↻ <span>Refresh data</span></button>
+        </div>
+      </header>
+
+      <section class="filter-bar" aria-label="Dashboard filters">
+        <label>PERIODE DATA<select id="periodFilter"><option value="all">November 2026 · MTD</option></select></label>
+        <label>GRUP DEALER<select id="groupFilter"><option value="all">Semua Grup Dealer</option></select></label>
+        <label>KABUPATEN<select id="districtFilter"><option value="all">Semua Kabupaten</option></select></label>
+        <label>STATUS<select id="statusFilter"><option value="all">Semua Status</option></select></label>
+        <button class="reset-btn" id="resetBtn" type="button">Reset filter</button>
+      </section>
+
+      <section id="overview">
+        <div class="section-heading"><div><span class="section-kicker">EXECUTIVE SUMMARY</span><h2>Performance Overview</h2></div><span class="data-context">Based on current Google Sheets snapshot</span></div>
+        <div class="kpi-grid">
+          <article class="kpi-card primary"><div class="kpi-top"><span>Total Unit Entry MTD</span><span class="kpi-symbol">UE</span></div><strong id="kpiActual">—</strong><div class="kpi-foot"><span>Actual November</span><span id="kpiActualNote">Across AHASS</span></div></article>
+          <article class="kpi-card"><div class="kpi-top"><span>Target Unit Entry</span><span class="kpi-symbol">◎</span></div><strong id="kpiTarget">—</strong><div class="kpi-foot"><span>November target</span><span>All AHASS</span></div></article>
+          <article class="kpi-card"><div class="kpi-top"><span>Achievement</span><span class="kpi-symbol">%</span></div><strong id="kpiAchievement">—</strong><div class="progress-track"><div class="progress-fill" id="achievementBar"></div></div><div class="kpi-foot"><span>Actual vs target</span><span id="kpiGap">Gap: —</span></div></article>
+          <article class="kpi-card"><div class="kpi-top"><span>Growth vs M-1</span><span class="kpi-symbol">↗</span></div><strong id="kpiGrowth">—</strong><div class="kpi-foot"><span>MTD comparison</span><span id="growthLabel">Last month</span></div></article>
+        </div>
+        <div class="insight-strip">
+          <div class="insight-icon">i</div><div><strong id="insightTitle">Performance insight</strong><p id="insightText">Data insight akan ditampilkan setelah data berhasil dimuat.</p></div>
+        </div>
+      </section>
+
+      <section id="trend" class="dashboard-section">
+        <div class="section-heading"><div><span class="section-kicker">PERFORMANCE ANALYSIS</span><h2>Achievement & Performance</h2></div></div>
+        <div class="chart-grid">
+          <article class="panel chart-panel"><div class="panel-heading"><div><h3>Actual vs Target per AHASS</h3><p>Perbandingan pencapaian Unit Entry</p></div><span class="chart-tag">UNIT ENTRY</span></div><div class="chart-wrap"><canvas id="achievementChart"></canvas></div></article>
+          <article class="panel chart-panel"><div class="panel-heading"><div><h3>Contribution by Dealer Group</h3><p>Distribusi actual Unit Entry</p></div></div><div class="chart-wrap doughnut-wrap"><canvas id="groupChart"></canvas></div></article>
+        </div>
+        <div class="chart-grid lower-charts">
+          <article class="panel chart-panel"><div class="panel-heading"><div><h3>Achievement Distribution</h3><p>Jumlah AHASS berdasarkan pencapaian target</p></div></div><div class="chart-wrap compact"><canvas id="distributionChart"></canvas></div></article>
+          <article class="panel chart-panel"><div class="panel-heading"><div><h3>Top Growth AHASS</h3><p>Growth berdasarkan data Growth vs M-1</p></div></div><div class="chart-wrap compact"><canvas id="growthChart"></canvas></div></article>
+        </div>
+      </section>
+
+      <section id="ranking" class="dashboard-section">
+        <div class="section-heading"><div><span class="section-kicker">NETWORK PERFORMANCE</span><h2>AHASS Performance Ranking</h2></div><span class="data-context" id="rowCount">— AHASS</span></div>
+        <article class="panel table-panel">
+          <div class="table-toolbar"><div><h3>Detailed Unit Entry</h3><p>Gunakan pencarian untuk menemukan AHASS tertentu.</p></div><input id="searchInput" type="search" placeholder="Cari AHASS / kode / kabupaten..." /></div>
+          <div class="table-scroll"><table><thead><tr><th>#</th><th>AHASS</th><th>Grup Dealer</th><th>Kabupaten</th><th class="num">MTD Last Month</th><th class="num">Target Nov</th><th class="num">Actual Nov</th><th class="num">Growth</th><th class="num">Achievement</th></tr></thead><tbody id="rankingBody"><tr><td colspan="9" class="empty">Memuat data...</td></tr></tbody></table></div>
+          <div class="table-footer"><span id="tableInfo">—</span><div class="table-pagination"><button id="prevPage" type="button">‹</button><span id="pageInfo">1 / 1</span><button id="nextPage" type="button">›</button></div></div>
+        </article>
+      </section>
+      <footer>UNIT ENTRY PERFORMANCE DASHBOARD <span>ASTRA MOTOR SUMATERA SELATAN</span></footer>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
